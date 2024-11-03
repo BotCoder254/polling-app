@@ -1,0 +1,272 @@
+{% extends "base.html" %} {% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Welcome Section -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900">Welcome back, {{ current_user.username }}!</h1>
+        <p class="mt-2 text-gray-600">Here's an overview of your polling activity</p>
+    </div>
+
+    <!-- Stats Overview -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <!-- Total Polls -->
+        <div class="bg-white rounded-xl shadow-lg p-6 transform hover:scale-105 transition-all duration-300">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Total Polls</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ total_polls }}</p>
+                </div>
+                <div class="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-chart-bar text-indigo-600 text-xl"></i>
+                </div>
+            </div>
+            <div class="mt-4">
+                <div class="flex items-center">
+                    <span class="text-green-500 text-sm font-medium">
+                        <i class="fas fa-arrow-up mr-1"></i>{{ active_polls }}
+                    </span>
+                    <span class="ml-2 text-sm text-gray-500">Active polls</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Votes -->
+        <div class="bg-white rounded-xl shadow-lg p-6 transform hover:scale-105 transition-all duration-300">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Total Votes</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ total_votes }}</p>
+                </div>
+                <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-vote-yea text-green-600 text-xl"></i>
+                </div>
+            </div>
+            <div class="mt-4">
+                <div class="flex items-center">
+                    <span class="text-green-500 text-sm font-medium">
+                        <i class="fas fa-chart-line mr-1"></i>{{ engagement_rate }}%
+                    </span>
+                    <span class="ml-2 text-sm text-gray-500">Engagement rate</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Average Response Time -->
+        <div class="bg-white rounded-xl shadow-lg p-6 transform hover:scale-105 transition-all duration-300">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Avg. Response Time</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ avg_response_time }}</p>
+                </div>
+                <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-clock text-purple-600 text-xl"></i>
+                </div>
+            </div>
+            <div class="mt-4">
+                <div class="flex items-center">
+                    <span class="text-purple-500 text-sm font-medium">
+                        <i class="fas fa-users mr-1"></i>{{ total_participants }}
+                    </span>
+                    <span class="ml-2 text-sm text-gray-500">Total participants</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- User Engagement -->
+        <div class="bg-white rounded-xl shadow-lg p-6 transform hover:scale-105 transition-all duration-300">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">User Engagement</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ user_engagement }}%</p>
+                </div>
+                <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-users text-blue-600 text-xl"></i>
+                </div>
+            </div>
+            <div class="mt-4">
+                <div class="flex items-center">
+                    <span class="text-blue-500 text-sm font-medium">
+                        <i class="fas fa-chart-pie mr-1"></i>{{ active_users }}
+                    </span>
+                    <span class="ml-2 text-sm text-gray-500">Active users</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        <!-- Votes Over Time -->
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <h3 class="text-lg font-semibold mb-4">Votes Over Time</h3>
+            <div class="h-80">
+                <div id="votesChart"></div>
+            </div>
+        </div>
+
+        <!-- Engagement Analytics -->
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <h3 class="text-lg font-semibold mb-4">Engagement Analytics</h3>
+            <div class="h-80">
+                <div id="engagementChart"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Recent Polls -->
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <h3 class="text-lg font-semibold mb-4">Recent Polls</h3>
+            <div class="space-y-4">
+                {% for poll in recent_polls %}
+                <div class="flex items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                    <div class="flex-shrink-0 w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-poll text-indigo-600"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-900">{{ poll.title }}</p>
+                        <p class="text-sm text-gray-500">{{ poll.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                    </div>
+                    <div class="ml-auto">
+                        <a href="{{ url_for('polls.view', poll_id=poll.id) }}" class="text-indigo-600 hover:text-indigo-900">
+                            <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Recent Votes -->
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <h3 class="text-lg font-semibold mb-4">Recent Votes</h3>
+            <div class="space-y-4">
+                {% for vote in recent_votes %}
+                <div class="flex items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                    <div class="flex-shrink-0 w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-vote-yea text-green-600"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-900">{{ vote.poll.title }}</p>
+                        <p class="text-sm text-gray-500">{{ vote.timestamp.strftime('%Y-%m-%d %H:%M') }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Demographics -->
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <h3 class="text-lg font-semibold mb-4">Demographics</h3>
+            <div id="demographicsChart" class="h-80"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Load Plotly.js -->
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+<script>
+    // Votes Over Time Chart
+    const votesData = {
+        {
+            votes_data | tojson | safe
+        }
+    };
+    Plotly.newPlot('votesChart', [{
+        type: 'scatter',
+        mode: 'lines',
+        x: votesData.dates,
+        y: votesData.counts,
+        line: {
+            color: 'rgb(79, 70, 229)',
+            width: 2
+        },
+        fill: 'tozeroy',
+        fillcolor: 'rgba(79, 70, 229, 0.1)'
+    }], {
+        margin: {
+            t: 20,
+            r: 20,
+            l: 40,
+            b: 40
+        },
+        xaxis: {
+            showgrid: false,
+            zeroline: false
+        },
+        yaxis: {
+            showgrid: true,
+            gridcolor: 'rgb(243, 244, 246)'
+        },
+        paper_bgcolor: 'rgba(0,0,0,0)',
+        plot_bgcolor: 'rgba(0,0,0,0)'
+    });
+
+    // Engagement Analytics Chart
+    const engagementData = {
+        {
+            engagement_data | tojson | safe
+        }
+    };
+    Plotly.newPlot('engagementChart', [{
+        type: 'bar',
+        x: engagementData.categories,
+        y: engagementData.values,
+        marker: {
+            color: 'rgb(79, 70, 229)'
+        }
+    }], {
+        margin: {
+            t: 20,
+            r: 20,
+            l: 40,
+            b: 40
+        },
+        xaxis: {
+            showgrid: false
+        },
+        yaxis: {
+            showgrid: true,
+            gridcolor: 'rgb(243, 244, 246)'
+        },
+        paper_bgcolor: 'rgba(0,0,0,0)',
+        plot_bgcolor: 'rgba(0,0,0,0)'
+    });
+
+    // Demographics Chart
+    const demographicsData = {
+        {
+            demographics_data | tojson | safe
+        }
+    };
+    Plotly.newPlot('demographicsChart', [{
+        type: 'pie',
+        labels: demographicsData.labels,
+        values: demographicsData.values,
+        marker: {
+            colors: ['rgb(79, 70, 229)', 'rgb(59, 130, 246)', 'rgb(16, 185, 129)']
+        }
+    }], {
+        margin: {
+            t: 20,
+            r: 20,
+            l: 20,
+            b: 20
+        },
+        paper_bgcolor: 'rgba(0,0,0,0)',
+        showlegend: true,
+        legend: {
+            orientation: 'h',
+            y: -0.2
+        }
+    });
+
+    // Make charts responsive
+    window.addEventListener('resize', function() {
+        Plotly.Plots.resize('votesChart');
+        Plotly.Plots.resize('engagementChart');
+        Plotly.Plots.resize('demographicsChart');
+    });
+</script>
+{% endblock %}

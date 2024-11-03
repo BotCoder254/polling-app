@@ -1,0 +1,164 @@
+{% extends "base.html" %} {% block content %}
+<div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-white to-indigo-50">
+    <div class="max-w-md w-full mx-4">
+        <!-- Login Card -->
+        <div class="bg-white rounded-2xl shadow-xl overflow-hidden hover-card">
+            <!-- Header -->
+            <div class="p-6 bg-gradient-to-r from-indigo-600 to-blue-500">
+                <h2 class="text-2xl font-bold text-white text-center floating">Welcome Back!</h2>
+                <p class="text-indigo-100 text-center mt-2">Sign in to your account</p>
+            </div>
+
+            <!-- Login Form -->
+            <div class="p-8">
+                <form id="loginForm" method="POST" class="space-y-6">
+                    <!-- Email Field -->
+                    <div class="space-y-2">
+                        <label class="text-sm font-medium text-gray-700 block">Email</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-envelope text-gray-400"></i>
+                            </div>
+                            <input type="email" name="email" required class="pl-10 block w-full rounded-lg border-gray-300 focus:ring-indigo-500 focus:border-indigo-500" placeholder="Enter your email">
+                        </div>
+                    </div>
+
+                    <!-- Password Field -->
+                    <div class="space-y-2">
+                        <label class="text-sm font-medium text-gray-700 block">Password</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-lock text-gray-400"></i>
+                            </div>
+                            <input type="password" name="password" required class="pl-10 block w-full rounded-lg border-gray-300 focus:ring-indigo-500 focus:border-indigo-500" placeholder="Enter your password">
+                            <button type="button" onclick="togglePassword(this)" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Remember Me & Reset Password -->
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <label class="switch">
+                                <input type="checkbox" name="remember_me">
+                                <span class="slider"></span>
+                            </label>
+                            <span class="ml-2 text-sm text-gray-600">Remember me</span>
+                        </div>
+                        <a href="{{ url_for('auth.reset_password_request') }}" class="text-sm text-indigo-600 hover:text-indigo-500">
+                            Reset Password
+                        </a>
+                    </div>
+
+                    <!-- Login Button -->
+                    <button type="submit" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gradient-to-r from-indigo-600 to-blue-500 hover:from-indigo-700 hover:to-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transform hover:scale-105 transition-all duration-200">
+                        <span class="flex items-center">
+                            <i class="fas fa-sign-in-alt mr-2"></i>
+                            Sign In
+                        </span>
+                    </button>
+
+                    <!-- Social Login -->
+                    <div class="mt-6">
+                        <div class="relative">
+                            <div class="absolute inset-0 flex items-center">
+                                <div class="w-full border-t border-gray-300"></div>
+                            </div>
+                            <div class="relative flex justify-center text-sm">
+                                <span class="px-2 bg-white text-gray-500">Or continue with</span>
+                            </div>
+                        </div>
+
+                        <div class="mt-6 grid grid-cols-2 gap-3">
+                            <a href="{{ url_for('auth.google_login') }}" class="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transform hover:scale-105 transition-all duration-200">
+                                <i class="fab fa-google text-red-500 mr-2"></i> Google
+                            </a>
+                            <button type="button" class="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transform hover:scale-105 transition-all duration-200">
+                                <i class="fab fa-github text-gray-900 mr-2"></i>
+                                GitHub
+                            </button>
+                        </div>
+                    </div>
+                </form>
+
+                <!-- Register Link -->
+                <p class="mt-8 text-center text-sm text-gray-600">
+                    Don't have an account?
+                    <a href="{{ url_for('auth.register') }}" class="font-medium text-indigo-600 hover:text-indigo-500">
+                        Sign up now
+                    </a>
+                </p>
+            </div>
+        </div>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %} {% if messages %}
+        <div class="mt-4 space-y-2">
+            {% for category, message in messages %}
+            <div class="flash-message rounded-lg p-4 flex items-center justify-between
+                                  {% if category == 'success' %}bg-green-100 text-green-700
+                                  {% else %}bg-red-100 text-red-700{% endif %}">
+                <div class="flex items-center">
+                    <i class="fas {% if category == 'success' %}fa-check-circle{% else %}fa-exclamation-circle{% endif %} mr-2"></i>
+                    <p>{{ message }}</p>
+                </div>
+                <button onclick="this.parentElement.remove()" class="text-sm hover:opacity-75">
+                                <i class="fas fa-times"></i>
+                            </button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %} {% endwith %}
+    </div>
+</div>
+
+<script>
+    // Password visibility toggle
+    function togglePassword(button) {
+        const input = button.parentElement.querySelector('input');
+        const icon = button.querySelector('i');
+
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            input.type = 'password';
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
+    }
+
+    // Form submission with loading state
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+        const button = this.querySelector('button[type="submit"]');
+        const originalContent = button.innerHTML;
+
+        button.disabled = true;
+        button.innerHTML = `
+            <div class="flex items-center">
+                <div class="loading-spinner mr-2"></div>
+                Signing in...
+            </div>
+        `;
+
+        // Re-enable button after 2 seconds if form hasn't redirected
+        setTimeout(() => {
+            if (!button.disabled) return;
+            button.disabled = false;
+            button.innerHTML = originalContent;
+        }, 2000);
+    });
+
+    // Animate flash messages
+    document.querySelectorAll('.flash-message').forEach(message => {
+        gsap.from(message, {
+            y: -20,
+            opacity: 0,
+            duration: 0.5,
+            ease: 'power2.out'
+        });
+    });
+</script>
+{% endblock %}

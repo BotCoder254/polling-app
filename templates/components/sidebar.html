@@ -1,0 +1,101 @@
+{% macro render_sidebar(current_user) %}
+<div class="fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out" id="sidebar">
+    <!-- Sidebar Header -->
+    <div class="p-4 border-b">
+        <div class="flex items-center space-x-4">
+            <img src="{{ url_for('static', filename='uploads/' + current_user.profile_image) }}" alt="{{ current_user.username }}" class="w-10 h-10 rounded-full object-cover">
+            <div>
+                <h2 class="text-sm font-semibold">{{ current_user.username }}</h2>
+                <p class="text-xs text-gray-500">{{ current_user.email }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation Links -->
+    <nav class="p-4 space-y-2">
+        <!-- Dashboard -->
+        <a href="{{ url_for('user.dashboard') }}" class="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100 {% if request.endpoint == 'user.dashboard' %}bg-indigo-50 text-indigo-600{% endif %}">
+            <i class="fas fa-home w-5"></i>
+            <span>Dashboard</span>
+        </a>
+
+        <!-- My Polls -->
+        <div class="space-y-1">
+            <a href="{{ url_for('user.my_polls') }}" class="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100 {% if request.endpoint == 'user.my_polls' %}bg-indigo-50 text-indigo-600{% endif %}">
+                <i class="fas fa-poll w-5"></i>
+                <span>My Polls</span>
+            </a>
+            <a href="{{ url_for('polls.create') }}" class="flex items-center space-x-3 p-2 pl-10 rounded-lg hover:bg-gray-100 {% if request.endpoint == 'polls.create' %}bg-indigo-50 text-indigo-600{% endif %}">
+                <i class="fas fa-plus w-5"></i>
+                <span>Create New Poll</span>
+            </a>
+        </div>
+
+        <!-- My Votes -->
+        <a href="{{ url_for('user.my_votes') }}" class="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100 {% if request.endpoint == 'user.my_votes' %}bg-indigo-50 text-indigo-600{% endif %}">
+            <i class="fas fa-vote-yea w-5"></i>
+            <span>My Votes</span>
+        </a>
+
+        <!-- Analytics -->
+        <a href="{{ url_for('user.analytics') }}" class="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100 {% if request.endpoint == 'user.analytics' %}bg-indigo-50 text-indigo-600{% endif %}">
+            <i class="fas fa-chart-line w-5"></i>
+            <span>Analytics</span>
+        </a>
+
+        <!-- Profile -->
+        <a href="{{ url_for('user.profile', username=current_user.username) }}" class="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100 {% if request.endpoint == 'user.profile' %}bg-indigo-50 text-indigo-600{% endif %}">
+            <i class="fas fa-user w-5"></i>
+            <span>Profile</span>
+        </a>
+
+        <!-- Settings -->
+        <a href="{{ url_for('user.settings') }}" class="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100 {% if request.endpoint == 'user.settings' %}bg-indigo-50 text-indigo-600{% endif %}">
+            <i class="fas fa-cog w-5"></i>
+            <span>Settings</span>
+        </a>
+
+        <!-- Help & Support -->
+        <a href="{{ url_for('user.support') }}" class="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100 {% if request.endpoint == 'user.support' %}bg-indigo-50 text-indigo-600{% endif %}">
+            <i class="fas fa-question-circle w-5"></i>
+            <span>Help & Support</span>
+        </a>
+    </nav>
+
+    <!-- User Stats -->
+    <div class="absolute bottom-0 left-0 right-0 p-4 border-t bg-gray-50">
+        <div class="grid grid-cols-2 gap-4 text-center text-sm">
+            <div>
+                <p class="text-gray-500">Total Polls</p>
+                <p class="font-semibold">{{ current_user.total_polls_created }}</p>
+            </div>
+            <div>
+                <p class="text-gray-500">Total Votes</p>
+                <p class="font-semibold">{{ current_user.total_votes_cast }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Mobile Sidebar Toggle -->
+<button onclick="toggleSidebar()" class="fixed bottom-4 right-4 z-50 p-3 rounded-full bg-indigo-600 text-white shadow-lg hover:bg-indigo-700 lg:hidden">
+    <i class="fas fa-bars"></i>
+</button>
+
+<script>
+    function toggleSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        sidebar.classList.toggle('-translate-x-full');
+    }
+
+    // Close sidebar when clicking outside on mobile
+    document.addEventListener('click', function(event) {
+        const sidebar = document.getElementById('sidebar');
+        const toggleButton = document.querySelector('[onclick="toggleSidebar()"]');
+
+        if (!sidebar.contains(event.target) && !toggleButton.contains(event.target)) {
+            sidebar.classList.add('-translate-x-full');
+        }
+    });
+</script>
+{% endmacro %}

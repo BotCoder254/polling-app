@@ -1,0 +1,192 @@
+{% extends "base.html" %} {% from "components/pagination.html" import render_pagination %} {% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Filters and Search Section -->
+    <div class="bg-white rounded-xl shadow-lg p-6 mb-8 animate-fade-in">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Search -->
+            <div class="relative">
+                <input type="text" id="searchInput" placeholder="Search polls..." class="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" value="{{ current_filters.search }}">
+                <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+            </div>
+
+            <!-- Tag Filter -->
+            <div class="relative">
+                <select id="tagFilter" class="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                    <option value="">All Tags</option>
+                    {% for tag in all_tags %}
+                        <option value="{{ tag }}" {% if current_filters.tag == tag %}selected{% endif %}>{{ tag }}</option>
+                    {% endfor %}
+                </select>
+                <i class="fas fa-tag absolute left-3 top-3 text-gray-400"></i>
+            </div>
+
+            <!-- Category Filter -->
+            <div class="relative">
+                <select id="categoryFilter" class="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                    <option value="">All Categories</option>
+                    {% for category in categories %}
+                        <option value="{{ category }}" {% if current_filters.category == category %}selected{% endif %}>{{ category }}</option>
+                    {% endfor %}
+                </select>
+                <i class="fas fa-folder absolute left-3 top-3 text-gray-400"></i>
+            </div>
+        </div>
+
+        <!-- Sort Options -->
+        <div class="mt-4 flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+                <span class="text-sm text-gray-500">Sort by:</span>
+                <select id="sortBy" class="border-0 bg-transparent focus:ring-0 text-sm text-gray-700">
+                    <option value="created_at" {% if current_filters.sort == 'created_at' %}selected{% endif %}>Date Created</option>
+                    <option value="total_votes" {% if current_filters.sort == 'total_votes' %}selected{% endif %}>Most Votes</option>
+                    <option value="views" {% if current_filters.sort == 'views' %}selected{% endif %}>Most Views</option>
+                </select>
+                <button id="sortOrder" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-sort-amount-{{ 'down' if current_filters.order == 'desc' else 'up' }}"></i>
+                </button>
+            </div>
+
+            <div class="flex items-center space-x-2">
+                <button id="gridView" class="p-2 rounded-lg hover:bg-gray-100 {{ 'text-indigo-600' if view_mode == 'grid' }}">
+                    <i class="fas fa-grid-2"></i>
+                </button>
+                <button id="listView" class="p-2 rounded-lg hover:bg-gray-100 {{ 'text-indigo-600' if view_mode == 'list' }}">
+                    <i class="fas fa-list"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Polls Grid -->
+    <div id="pollsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for poll in polls.items %}
+        <div class="poll-card bg-white rounded-xl shadow-lg overflow-hidden transform hover:-translate-y-1 transition-all duration-300">
+            <div class="p-6">
+                <div class="flex justify-between items-start mb-4">
+                    <h3 class="text-xl font-bold text-gray-900 hover:text-indigo-600 transition-colors">
+                        <a href="{{ url_for('polls.view', poll_id=poll.id) }}">{{ poll.title }}</a>
+                    </h3>
+                    <div class="flex space-x-2">
+                        {% if poll.is_private %}
+                        <span class="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800">
+                                    <i class="fas fa-lock"></i>
+                                </span> {% endif %} {% if poll.allow_anonymous %}
+                        <span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">
+                                    <i class="fas fa-user-secret"></i>
+                                </span> {% endif %}
+                    </div>
+                </div>
+
+                <p class="text-gray-600 mb-4">{{ poll.description }}</p>
+
+                {% if poll.tags %}
+                <div class="flex flex-wrap gap-2 mb-4">
+                    {% for tag in poll.tags %}
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                                    #{{ tag }}
+                                </span> {% endfor %}
+                </div>
+                {% endif %}
+
+                <div class="flex items-center justify-between text-sm text-gray-500">
+                    <div class="flex items-center space-x-4">
+                        <span class="flex items-center">
+                                <i class="fas fa-vote-yea mr-1"></i>
+                                {{ poll.total_votes }} votes
+                            </span>
+                        <span class="flex items-center">
+                                <i class="fas fa-eye mr-1"></i>
+                                {{ poll.views }} views
+                            </span>
+                    </div>
+                    <div class="flex items-center">
+                        <img src="{{ url_for('static', filename='uploads/' + poll.created_by.profile_image) }}" alt="{{ poll.created_by.username }}" class="w-6 h-6 rounded-full mr-2">
+                        <span>{{ poll.created_by.username }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-gray-50 px-6 py-3 flex justify-between items-center">
+                <span class="text-sm text-gray-500">
+                        <i class="far fa-clock mr-1"></i>
+                        {{ poll.created_at.strftime('%Y-%m-%d') }}
+                    </span>
+                <a href="{{ url_for('polls.view', poll_id=poll.id) }}" class="inline-flex items-center px-3 py-1 rounded-md text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 transition-colors">
+                    <i class="fas fa-chart-pie mr-1"></i> View Poll
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if polls.items %}
+    <div class="mt-8">
+        {{ render_pagination(polls.pagination, 'polls.list') }}
+    </div>
+    {% else %}
+    <div class="text-center py-12">
+        <div class="text-gray-400 mb-4">
+            <i class="fas fa-poll text-6xl"></i>
+        </div>
+        <p class="text-gray-500 mb-4">No polls found</p>
+        <a href="{{ url_for('polls.create') }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700">
+            <i class="fas fa-plus mr-2"></i> Create New Poll
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+    // Filter functionality
+    function updateFilters() {
+        const searchParams = new URLSearchParams(window.location.search);
+        searchParams.set('search', document.getElementById('searchInput').value);
+        searchParams.set('tag', document.getElementById('tagFilter').value);
+        searchParams.set('category', document.getElementById('categoryFilter').value);
+        searchParams.set('sort', document.getElementById('sortBy').value);
+        searchParams.set('order', document.getElementById('sortOrder').getAttribute('data-order'));
+
+        window.location.search = searchParams.toString();
+    }
+
+    // Add event listeners
+    document.getElementById('searchInput').addEventListener('input', debounce(updateFilters, 500));
+    document.getElementById('tagFilter').addEventListener('change', updateFilters);
+    document.getElementById('categoryFilter').addEventListener('change', updateFilters);
+    document.getElementById('sortBy').addEventListener('change', updateFilters);
+
+    document.getElementById('sortOrder').addEventListener('click', function() {
+        const currentOrder = this.getAttribute('data-order') || 'desc';
+        this.setAttribute('data-order', currentOrder === 'desc' ? 'asc' : 'desc');
+        this.querySelector('i').className = `fas fa-sort-amount-${currentOrder === 'desc' ? 'up' : 'down'}`;
+        updateFilters();
+    });
+
+    // Debounce function
+    function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+
+    // GSAP Animations
+    gsap.from(".poll-card", {
+        scrollTrigger: {
+            trigger: ".poll-card",
+            start: "top bottom-=100",
+            toggleActions: "play none none reverse"
+        },
+        y: 50,
+        opacity: 0,
+        duration: 0.8,
+        stagger: 0.2
+    });
+</script>
+{% endblock %}

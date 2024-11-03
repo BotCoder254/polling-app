@@ -1,0 +1,234 @@
+{% extends "base.html" %} {% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Poll Header -->
+    <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+        <div class="flex justify-between items-start">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">{{ poll.title }}</h1>
+                <p class="mt-2 text-gray-600">{{ poll.description }}</p>
+            </div>
+            <div class="flex space-x-2">
+                <span class="px-3 py-1 rounded-full text-sm 
+                    {% if poll.status == 'active' %}bg-green-100 text-green-800
+                    {% else %}bg-gray-100 text-gray-800{% endif %}">
+                    <i class="fas fa-circle mr-1"></i>{{ poll.status|title }}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <!-- Total Votes -->
+        <div class="bg-white rounded-xl shadow-lg p-6 transform hover:scale-105 transition-all duration-300">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Total Votes</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ total_votes }}</p>
+                </div>
+                <div class="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-vote-yea text-indigo-600 text-xl"></i>
+                </div>
+            </div>
+            <div class="mt-4">
+                <div class="flex items-center">
+                    <span class="text-green-500 text-sm font-medium">
+                        <i class="fas fa-chart-line mr-1"></i>{{ engagement_rate|round(1) }}%
+                    </span>
+                    <span class="ml-2 text-sm text-gray-500">Engagement rate</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Views -->
+        <div class="bg-white rounded-xl shadow-lg p-6 transform hover:scale-105 transition-all duration-300">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Total Views</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ poll.views }}</p>
+                </div>
+                <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-eye text-blue-600 text-xl"></i>
+                </div>
+            </div>
+            <div class="mt-4">
+                <div class="flex items-center">
+                    <span class="text-blue-500 text-sm font-medium">
+                        <i class="fas fa-users mr-1"></i>{{ poll.views - total_votes }}
+                    </span>
+                    <span class="ml-2 text-sm text-gray-500">Unique visitors</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Share Stats -->
+        <div class="bg-white rounded-xl shadow-lg p-6 transform hover:scale-105 transition-all duration-300">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Share Count</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ poll.share_count|default(0) }}</p>
+                </div>
+                <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-share-alt text-green-600 text-xl"></i>
+                </div>
+            </div>
+            <div class="mt-4">
+                <div class="flex items-center">
+                    <span class="text-green-500 text-sm font-medium">
+                        <i class="fas fa-link mr-1"></i>{{ poll.click_through_rate|default(0) }}%
+                    </span>
+                    <span class="ml-2 text-sm text-gray-500">Click-through rate</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Time Stats -->
+        <div class="bg-white rounded-xl shadow-lg p-6 transform hover:scale-105 transition-all duration-300">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Avg. Response Time</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ avg_response_time }}</p>
+                </div>
+                <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-clock text-purple-600 text-xl"></i>
+                </div>
+            </div>
+            <div class="mt-4">
+                <div class="flex items-center">
+                    <span class="text-purple-500 text-sm font-medium">
+                        <i class="fas fa-history mr-1"></i>{{ poll.duration }}
+                    </span>
+                    <span class="ml-2 text-sm text-gray-500">Total duration</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        <!-- Vote Distribution -->
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <h3 class="text-lg font-semibold mb-4">Vote Distribution</h3>
+            <div class="h-80">
+                <canvas id="voteDistributionChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Hourly Activity -->
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <h3 class="text-lg font-semibold mb-4">Hourly Activity</h3>
+            <div class="h-80">
+                <canvas id="hourlyActivityChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed Analytics -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Vote Timeline -->
+        <div class="lg:col-span-2 bg-white rounded-xl shadow-lg p-6">
+            <h3 class="text-lg font-semibold mb-4">Vote Timeline</h3>
+            <div class="h-80">
+                <canvas id="voteTimelineChart"></canvas>
+            </div>
+        </div>
+
+        <!-- User Demographics -->
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <h3 class="text-lg font-semibold mb-4">User Demographics</h3>
+            <div class="h-80">
+                <canvas id="demographicsChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Export Section -->
+    <div class="mt-8 flex justify-end">
+        <a href="{{ url_for('user.export_poll_data', poll_id=poll.id) }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700">
+            <i class="fas fa-download mr-2"></i> Export Data
+        </a>
+    </div>
+</div>
+
+<script>
+    // Vote Distribution Chart
+    const voteDistributionCtx = document.getElementById('voteDistributionChart').getContext('2d');
+    new Chart(voteDistributionCtx, {
+        type: 'bar',
+        data: {
+            labels: Object.keys({
+                {
+                    vote_distribution | tojson | safe
+                }
+            }),
+            datasets: [{
+                label: 'Votes',
+                data: Object.values({
+                    {
+                        vote_distribution | tojson | safe
+                    }
+                }),
+                backgroundColor: 'rgba(79, 70, 229, 0.5)',
+                borderColor: 'rgb(79, 70, 229)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            }
+        }
+    });
+
+    // Hourly Activity Chart
+    const hourlyActivityCtx = document.getElementById('hourlyActivityChart').getContext('2d');
+    new Chart(hourlyActivityCtx, {
+        type: 'line',
+        data: {
+            labels: Object.keys({
+                {
+                    hourly_distribution | tojson | safe
+                }
+            }).map(hour => `${hour}:00`),
+            datasets: [{
+                label: 'Votes',
+                data: Object.values({
+                    {
+                        hourly_distribution | tojson | safe
+                    }
+                }),
+                borderColor: 'rgb(59, 130, 246)',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+
+    // Make charts responsive
+    window.addEventListener('resize', function() {
+        Chart.instances.forEach(chart => {
+            chart.resize();
+        });
+    });
+</script>
+{% endblock %}

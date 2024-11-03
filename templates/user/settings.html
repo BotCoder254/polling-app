@@ -1,0 +1,124 @@
+{% extends "base.html" %} {% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="bg-white rounded-xl shadow-lg">
+        <div class="p-6 border-b">
+            <h2 class="text-2xl font-bold">Settings</h2>
+        </div>
+
+        <div class="p-6">
+            <form id="settingsForm" class="space-y-8">
+                <!-- Appearance -->
+                <div>
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Appearance</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Theme</label>
+                            <select name="theme" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                <option value="light" {% if user.preferences.theme == 'light' %}selected{% endif %}>Light</option>
+                                <option value="dark" {% if user.preferences.theme == 'dark' %}selected{% endif %}>Dark</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Chart Type</label>
+                            <select name="chart_type" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                <option value="bar" {% if user.preferences.chart_type == 'bar' %}selected{% endif %}>Bar Chart</option>
+                                <option value="progress" {% if user.preferences.chart_type == 'progress' %}selected{% endif %}>Progress Bar</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Privacy -->
+                <div>
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Privacy</h3>
+                    <div class="space-y-4">
+                        <div class="flex items-center">
+                            <input type="checkbox" name="show_email" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" {% if user.preferences.privacy.show_email %}checked{% endif %}>
+                            <label class="ml-2 block text-sm text-gray-900">Show email to other users</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" name="show_votes" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" {% if user.preferences.privacy.show_votes %}checked{% endif %}>
+                            <label class="ml-2 block text-sm text-gray-900">Show my votes on polls</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" name="show_activity" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" {% if user.preferences.privacy.show_activity %}checked{% endif %}>
+                            <label class="ml-2 block text-sm text-gray-900">Show my activity in feed</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notifications -->
+                <div>
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Notifications</h3>
+                    <div class="space-y-4">
+                        <div class="flex items-center">
+                            <input type="checkbox" name="email_notifications" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" {% if user.preferences.email_notifications %}checked{% endif %}>
+                            <label class="ml-2 block text-sm text-gray-900">Email notifications</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Regional -->
+                <div>
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Regional</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Language</label>
+                            <select name="language" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                <option value="en" {% if user.preferences.language == 'en' %}selected{% endif %}>English</option>
+                                <option value="es" {% if user.preferences.language == 'es' %}selected{% endif %}>Spanish</option>
+                                <option value="fr" {% if user.preferences.language == 'fr' %}selected{% endif %}>French</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Timezone</label>
+                            <select name="timezone" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                {% for tz in timezones %}
+                                <option value="{{ tz }}" {% if user.preferences.timezone == tz %}selected{% endif %}>{{ tz }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-end">
+                    <button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors">
+                        Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('settingsForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        const data = Object.fromEntries(formData);
+
+        try {
+            const response = await fetch('/user/settings', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            });
+
+            if (response.ok) {
+                // Show success message
+                alert('Settings saved successfully!');
+                if (data.theme !== '{{ user.preferences.theme }}') {
+                    // Reload page to apply theme changes
+                    window.location.reload();
+                }
+            } else {
+                throw new Error('Failed to save settings');
+            }
+        } catch (error) {
+            alert('Error saving settings: ' + error.message);
+        }
+    });
+</script>
+{% endblock %}

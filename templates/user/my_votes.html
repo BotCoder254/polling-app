@@ -1,0 +1,134 @@
+{% extends "base.html" %} {% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Stats Overview -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <!-- Total Votes -->
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-indigo-100 text-indigo-600">
+                    <i class="fas fa-vote-yea text-2xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm text-gray-500">Total Votes</p>
+                    <p class="text-2xl font-semibold">{{ voted_polls|default([])|length }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Active Polls -->
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-green-100 text-green-600">
+                    <i class="fas fa-chart-line text-2xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm text-gray-500">Active Polls</p>
+                    <p class="text-2xl font-semibold">
+                        {% set active_polls = voted_polls|default([])|selectattr('status', 'equalto', 'active')|list %} {{ active_polls|length }}
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Participation Rate -->
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-blue-100 text-blue-600">
+                    <i class="fas fa-percentage text-2xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm text-gray-500">Active Poll Rate</p>
+                    <p class="text-2xl font-semibold">
+                        {% set total_polls = voted_polls|default([])|length %} {% if total_polls > 0 %} {% set active_polls = voted_polls|selectattr('status', 'equalto', 'active')|list %} {{ ((active_polls|length / total_polls) * 100)|round|int }}% {% else %} 0% {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Votes List -->
+    <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+        <div class="p-6 border-b border-gray-200">
+            <h2 class="text-xl font-bold text-gray-900">My Votes</h2>
+        </div>
+
+        {% if voted_polls and voted_polls|length > 0 %}
+        <div class="divide-y divide-gray-200">
+            {% for poll in voted_polls %}
+            <div class="p-6 hover:bg-gray-50 transition-colors duration-200">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <a href="{{ url_for('polls.view', poll_id=poll.id) }}" class="text-lg font-medium text-indigo-600 hover:text-indigo-700">
+                                    {{ poll.title }}
+                                </a>
+                        <p class="mt-1 text-sm text-gray-500">
+                            Created by {{ poll.created_by.username }} • {{ poll.created_at.strftime('%B %d, %Y') }}
+                        </p>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                           {% if poll.status == 'active' %}
+                                               bg-green-100 text-green-800
+                                           {% else %}
+                                               bg-gray-100 text-gray-800
+                                           {% endif %}">
+                                    {{ poll.status|title }}
+                                </span>
+                        <a href="{{ url_for('polls.view', poll_id=poll.id) }}" class="inline-flex items-center text-sm text-gray-500 hover:text-gray-700">
+                            <i class="fas fa-external-link-alt mr-1"></i> View Results
+                            <a href="{{ url_for('polls.view', poll_id=poll.id) }}" class="inline-flex items-center text-sm text-gray-500 hover:text-gray-700">
+                                <i class="fas fa-external-link-alt mr-1"></i> View Results
+                            </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="p-6">
+            {% if voted_polls %}
+            <div class="grid grid-cols-1 gap-6">
+                {% for poll in voted_polls %}
+                <div class="bg-white border rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 p-6">
+                    <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+                        <div class="mb-4 md:mb-0">
+                            <h3 class="text-lg font-semibold mb-2">{{ poll.title }}</h3>
+                            <p class="text-gray-600">{{ poll.description }}</p>
+                            <div class="mt-2 flex items-center text-sm text-gray-500">
+                                <i class="fas fa-user mr-1"></i> Created by {{ poll.created_by.username }}
+                            </div>
+                        </div>
+                        <div class="flex flex-col items-end">
+                            <span class="px-3 py-1 rounded-full text-sm 
+                                       {% if poll.status == 'active' %}
+                                       bg-green-100 text-green-800
+                                       {% else %}
+                                       bg-gray-100 text-gray-800
+                                       {% endif %}">
+                                {{ poll.status|title }}
+                            </span>
+                            <div class="mt-2">
+                                <a href="{{ url_for('polls.view', poll_id=poll.id) }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700">
+                                    <i class="fas fa-chart-pie mr-2"></i> View Results
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-8">
+                <div class="text-gray-400 mb-4">
+                    <i class="fas fa-vote-yea text-6xl"></i>
+                </div>
+                <p class="text-gray-500">You haven't voted on any polls yet</p>
+                <a href="{{ url_for('polls.list') }}" class="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700">
+                    <i class="fas fa-poll mr-2"></i> Browse Polls
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

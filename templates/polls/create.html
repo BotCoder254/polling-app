@@ -1,0 +1,314 @@
+{% extends "base.html" %} {% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="bg-white rounded-xl shadow-lg">
+        <div class="p-6 border-b border-gray-200">
+            <h2 class="text-2xl font-bold">Create New Poll</h2>
+        </div>
+
+        <div class="p-6">
+            <form id="createPollForm" method="POST" class="space-y-8">
+                <!-- Basic Info -->
+                <div>
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Basic Information</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Poll Type</label>
+                            <select name="poll_type" id="pollType" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                                <option value="simple_poll">Simple Poll</option>
+                                <option value="survey">Multi-Question Survey</option>
+                                <option value="ranking">Ranking Poll</option>
+                                <option value="quiz">Quiz</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Title</label>
+                            <input type="text" name="title" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Description</label>
+                            <textarea name="description" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Questions Section -->
+                <div id="questionsContainer" class="space-y-6">
+                    <!-- For Simple Poll -->
+                    <div id="simplePollOptions" class="poll-type-section">
+                        <h3 class="text-lg font-medium text-gray-900 mb-4">Options</h3>
+                        <div class="space-y-2" id="optionsContainer">
+                            <div class="flex items-center space-x-2">
+                                <input type="text" name="options[]" required class="flex-1 rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                                <button type="button" class="remove-option text-red-500 hover:text-red-700">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <button type="button" id="addOption" class="mt-2 text-sm text-indigo-600 hover:text-indigo-500">
+                            <i class="fas fa-plus mr-1"></i>Add Option
+                        </button>
+                    </div>
+
+                    <!-- For Survey/Quiz -->
+                    <div id="surveyQuestions" class="poll-type-section hidden">
+                        <div id="questionsList" class="space-y-6">
+                            <!-- Questions will be added here -->
+                        </div>
+                        <button type="button" id="addQuestion" class="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-indigo-600 bg-indigo-100 hover:bg-indigo-200">
+                            <i class="fas fa-plus mr-2"></i>Add Question
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Settings -->
+                <div>
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Settings</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Expiration Date (optional)</label>
+                            <input type="datetime-local" name="expires_at" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                        </div>
+
+                        <div class="space-y-2">
+                            <div class="flex items-center">
+                                <input type="checkbox" name="is_private" id="isPrivate" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                                <label for="isPrivate" class="ml-2 text-sm text-gray-700">Make this poll private</label>
+                            </div>
+
+                            <div class="flex items-center">
+                                <input type="checkbox" name="allow_anonymous" id="allowAnonymous" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                                <label for="allowAnonymous" class="ml-2 text-sm text-gray-700">Allow anonymous voting</label>
+                            </div>
+
+                            <div class="flex items-center">
+                                <input type="checkbox" name="require_verification" id="requireVerification" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                                <label for="requireVerification" class="ml-2 text-sm text-gray-700">Require email verification</label>
+                            </div>
+
+                            <div class="flex items-center">
+                                <input type="checkbox" name="one_vote_per_ip" id="oneVotePerIp" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                                <label for="oneVotePerIp" class="ml-2 text-sm text-gray-700">Limit to one vote per IP</label>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Results Visibility</label>
+                            <select name="show_results" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                                <option value="always">Always show results</option>
+                                <option value="after_vote">Show after voting</option>
+                                <option value="after_close">Show after poll closes</option>
+                                <option value="never">Never show results</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Tags (comma-separated)</label>
+                            <input type="text" name="tags" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                        </div>
+
+                        <div id="privateSettings" class="hidden space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Access Code (optional)</label>
+                                <input type="text" name="access_code" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Allowed Email Domains (optional, comma-separated)</label>
+                                <input type="text" name="allowed_domains" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="example.com, another-domain.com">
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Allowed Users</label>
+                                <select name="allowed_users[]" multiple class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                                    {% for user in users %}
+                                        <option value="{{ user.username }}">{{ user.username }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-end">
+                    <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700">
+                        <i class="fas fa-check mr-2"></i>Create Poll
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Question template for survey/quiz
+    const questionTemplate = `
+    <div class="question-item bg-gray-50 p-4 rounded-lg">
+        <div class="flex justify-between items-start mb-4">
+            <div class="flex-1 mr-4">
+                <input type="text" name="questions[][text]" placeholder="Question text" required
+                       class="block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+            </div>
+            <button type="button" class="remove-question text-red-500 hover:text-red-700">
+                <i class="fas fa-trash"></i>
+            </button>
+        </div>
+        
+        <div class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Question Type</label>
+                <select name="questions[][type]" class="question-type mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                    <option value="single_choice">Single Choice</option>
+                    <option value="multiple_choice">Multiple Choice</option>
+                    <option value="ranking">Ranking</option>
+                    <option value="weighted">Weighted Choice</option>
+                    <option value="text">Text Answer</option>
+                    <option value="scale">Scale</option>
+                </select>
+            </div>
+            
+            <div class="question-options">
+                <!-- Options will be added here -->
+            </div>
+            
+            <div class="question-settings space-y-2">
+                <div class="flex items-center">
+                    <input type="checkbox" name="questions[][required]" checked
+                           class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                    <label class="ml-2 text-sm text-gray-700">Required question</label>
+                </div>
+            </div>
+        </div>
+    </div>
+`;
+
+    // Initialize form handlers
+    document.addEventListener('DOMContentLoaded', function() {
+        const pollType = document.getElementById('pollType');
+        const simplePollOptions = document.getElementById('simplePollOptions');
+        const surveyQuestions = document.getElementById('surveyQuestions');
+        const isPrivateCheckbox = document.getElementById('isPrivate');
+        const privateSettings = document.getElementById('privateSettings');
+
+        // Poll type change handler
+        pollType.addEventListener('change', function() {
+            if (this.value === 'simple_poll') {
+                simplePollOptions.classList.remove('hidden');
+                surveyQuestions.classList.add('hidden');
+            } else {
+                simplePollOptions.classList.add('hidden');
+                surveyQuestions.classList.remove('hidden');
+            }
+        });
+
+        // Private poll settings toggle
+        isPrivateCheckbox.addEventListener('change', function() {
+            privateSettings.classList.toggle('hidden', !this.checked);
+        });
+
+        // Add option button handler
+        document.getElementById('addOption') ? .addEventListener('click', function() {
+            const container = document.getElementById('optionsContainer');
+            const optionDiv = document.createElement('div');
+            optionDiv.className = 'flex items-center space-x-2';
+            optionDiv.innerHTML = `
+            <input type="text" name="options[]" required
+                   class="flex-1 rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+            <button type="button" class="remove-option text-red-500 hover:text-red-700">
+                <i class="fas fa-times"></i>
+            </button>
+        `;
+            container.appendChild(optionDiv);
+        });
+
+        // Add question button handler
+        document.getElementById('addQuestion') ? .addEventListener('click', function() {
+            const container = document.getElementById('questionsList');
+            const questionDiv = document.createElement('div');
+            questionDiv.innerHTML = questionTemplate;
+            container.appendChild(questionDiv);
+        });
+
+        // Remove option/question handlers
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.remove-option')) {
+                const optionDiv = e.target.closest('.flex');
+                if (document.querySelectorAll('[name="options[]"]').length > 2) {
+                    optionDiv.remove();
+                }
+            }
+            if (e.target.closest('.remove-question')) {
+                const questionDiv = e.target.closest('.question-item');
+                questionDiv.remove();
+            }
+        });
+
+        // Question type change handler
+        document.addEventListener('change', function(e) {
+            if (e.target.classList.contains('question-type')) {
+                updateQuestionOptions(e.target);
+            }
+        });
+    });
+
+    function updateQuestionOptions(selectElement) {
+        const questionItem = selectElement.closest('.question-item');
+        const optionsContainer = questionItem.querySelector('.question-options');
+        const type = selectElement.value;
+
+        let optionsHTML = '';
+        switch (type) {
+            case 'single_choice':
+            case 'multiple_choice':
+            case 'ranking':
+            case 'weighted':
+                optionsHTML = `
+                <div class="space-y-2">
+                    <label class="block text-sm font-medium text-gray-700">Options</label>
+                    <div class="options-list space-y-2">
+                        <div class="flex items-center space-x-2">
+                            <input type="text" name="questions[][options][]" required
+                                   class="flex-1 rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                            <button type="button" class="remove-option text-red-500 hover:text-red-700">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <button type="button" class="add-option text-sm text-indigo-600 hover:text-indigo-500">
+                        <i class="fas fa-plus mr-1"></i>Add Option
+                    </button>
+                </div>
+            `;
+                break;
+            case 'scale':
+                optionsHTML = `
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Minimum Value</label>
+                        <input type="number" name="questions[][scale_min]" value="1"
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Maximum Value</label>
+                        <input type="number" name="questions[][scale_max]" value="5"
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                </div>
+            `;
+                break;
+            case 'text':
+                optionsHTML = `
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Placeholder Text</label>
+                    <input type="text" name="questions[][placeholder]"
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+            `;
+                break;
+        }
+
+        optionsContainer.innerHTML = optionsHTML;
+    }
+</script>
+{% endblock %}

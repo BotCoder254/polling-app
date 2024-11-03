@@ -1,0 +1,233 @@
+{% extends "base.html" %} {% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Main Poll Content -->
+        <div class="lg:col-span-2">
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                <div class="p-6 border-b border-gray-200">
+                    <div class="flex justify-between items-start">
+                        <h1 class="text-3xl font-bold text-gray-900">{{ poll.title }}</h1>
+                        <div class="flex space-x-2">
+                            {% if poll.is_private %}
+                            <span class="px-3 py-1 rounded-full text-sm bg-yellow-100 text-yellow-800">
+                                <i class="fas fa-lock mr-1"></i>Private
+                            </span> {% endif %}
+                            <span class="px-3 py-1 rounded-full text-sm 
+                                {% if poll.status == 'active' %}bg-green-100 text-green-800
+                                {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                <i class="fas fa-circle mr-1"></i>{{ poll.status|title }}
+                            </span>
+                        </div>
+                    </div>
+                    <p class="mt-4 text-gray-600">{{ poll.description }}</p>
+
+                    <!-- Poll Metadata -->
+                    <div class="mt-6 flex flex-wrap gap-4 text-sm text-gray-500">
+                        <div class="flex items-center">
+                            <i class="fas fa-user mr-2"></i> Created by {{ poll.created_by.username }}
+                        </div>
+                        <div class="flex items-center">
+                            <i class="fas fa-calendar mr-2"></i> {{ poll.created_at.strftime('%Y-%m-%d %H:%M') }}
+                        </div>
+                        {% if poll.expires_at %}
+                        <div class="flex items-center">
+                            <i class="fas fa-clock mr-2"></i> Expires {{ poll.expires_at.strftime('%Y-%m-%d %H:%M') }}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Voting Section -->
+                <div class="p-6">
+                    {% if poll.status == 'active' %}
+                    <form id="voteForm" class="space-y-4">
+                        {% for option in poll.options %}
+                        <label class="block">
+                                <div class="relative flex items-center p-4 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors group">
+                                    <input type="radio" name="option" value="{{ loop.index0 }}"
+                                           class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300">
+                                    <span class="ml-3">{{ option }}</span>
+                                    <div class="absolute inset-0 bg-indigo-50 opacity-0 group-hover:opacity-10 rounded-lg transition-opacity"></div>
+                                </div>
+                            </label> {% endfor %}
+
+                        <!-- Anonymous Voting Option -->
+                        {% if poll.allow_anonymous and not current_user.is_authenticated %}
+                        <div class="mt-4 flex items-center">
+                            <input type="checkbox" id="anonymous" name="anonymous" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                            <label for="anonymous" class="ml-2 text-sm text-gray-600">Vote anonymously</label>
+                        </div>
+                        {% endif %}
+
+                        <button type="submit" class="w-full mt-6 inline-flex justify-center items-center px-4 py-2 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
+                                <i class="fas fa-vote-yea mr-2"></i>
+                                Submit Vote
+                            </button>
+                    </form>
+                    {% endif %}
+
+                    <!-- Results Section -->
+                    <div id="resultsSection" class="mt-8">
+                        <h3 class="text-xl font-bold mb-6">Results</h3>
+                        <div class="space-y-6">
+                            {% for option in poll.options %}
+                            <div class="result-item">
+                                <div class="flex justify-between mb-2">
+                                    <span class="text-gray-700">{{ option }}</span>
+                                    <span class="text-gray-900 font-medium vote-count">0</span>
+                                </div>
+                                <div class="relative">
+                                    <div class="h-4 bg-gray-200 rounded-full overflow-hidden">
+                                        <div class="h-full bg-gradient-to-r from-indigo-500 to-blue-500 rounded-full transition-all duration-1000" style="width: 0%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Poll Insights Sidebar -->
+        <div class="lg:col-span-1 space-y-6">
+            <!-- Quick Stats -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h3 class="text-lg font-semibold mb-4">Poll Insights</h3>
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600">Total Votes</span>
+                        <span class="text-2xl font-bold text-indigo-600" id="totalVotes">0</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600">Views</span>
+                        <span class="text-2xl font-bold text-indigo-600">{{ poll.views }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600">Engagement Rate</span>
+                        <span class="text-2xl font-bold text-indigo-600">{{ "%.1f"|format(poll.engagement_rate) }}%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vote Trends -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h3 class="text-lg font-semibold mb-4">Vote Trends</h3>
+                <canvas id="trendChart" class="w-full"></canvas>
+            </div>
+
+            <!-- Share Button -->
+            <a href="{{ url_for('polls.share', poll_id=poll.id) }}" class="block w-full text-center px-4 py-3 border border-transparent font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 transition-colors">
+                <i class="fas fa-share-alt mr-2"></i> Share Poll
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Initialize vote data
+    let voteData = {
+        {
+            poll.to_dict() | tojson | safe
+        }
+    };
+
+    // Update results function
+    function updateResults(data) {
+        const totalVotes = data.total_votes;
+        document.getElementById('totalVotes').textContent = totalVotes;
+
+        // Update each result bar with animation
+        Object.entries(data.votes).forEach(([option, votes], index) => {
+            const percentage = totalVotes > 0 ? (votes / totalVotes * 100) : 0;
+            const resultItem = document.querySelectorAll('.result-item')[index];
+
+            gsap.to(resultItem.querySelector('.bg-gradient-to-r'), {
+                width: `${percentage}%`,
+                duration: 1,
+                ease: 'power2.out'
+            });
+
+            resultItem.querySelector('.vote-count').textContent =
+                `${votes} vote${votes !== 1 ? 's' : ''} (${percentage.toFixed(1)}%)`;
+        });
+    }
+
+    // Initialize trend chart
+    const trends = {
+        {
+            poll.get_vote_trends() | tojson | safe
+        }
+    };
+    const ctx = document.getElementById('trendChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: Object.keys(trends),
+            datasets: [{
+                label: 'Votes',
+                data: Object.values(trends),
+                borderColor: 'rgb(79, 70, 229)',
+                tension: 0.4,
+                fill: true,
+                backgroundColor: 'rgba(79, 70, 229, 0.1)'
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            }
+        }
+    });
+
+    // Handle form submission
+    document.getElementById('voteForm') ? .addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const formData = new FormData(this);
+        try {
+            const response = await fetch('{{ url_for("polls.vote", poll_id=poll.id) }}', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'Failed to submit vote');
+            }
+
+            const data = await response.json();
+            updateResults(data);
+
+            // Disable form after successful vote
+            this.querySelectorAll('input').forEach(input => input.disabled = true);
+            this.querySelector('button').disabled = true;
+            this.querySelector('button').innerHTML = '<i class="fas fa-check mr-2"></i>Vote Submitted';
+            this.querySelector('button').classList.add('bg-green-600', 'cursor-not-allowed');
+
+            // Show success message
+            const successMessage = document.createElement('div');
+            successMessage.className = 'mt-4 p-4 bg-green-50 text-green-800 rounded-md';
+            successMessage.innerHTML = '<i class="fas fa-check-circle mr-2"></i>Your vote has been recorded!';
+            this.appendChild(successMessage);
+
+        } catch (error) {
+            alert(error.message);
+        }
+    });
+
+    // Initial results update
+    updateResults(voteData);
+</script>
+{% endblock %}

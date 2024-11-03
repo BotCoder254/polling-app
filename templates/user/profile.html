@@ -1,0 +1,166 @@
+{% extends "base.html" %} {% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Profile Card -->
+        <div class="lg:col-span-1">
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <div class="text-center">
+                    <div class="relative group mx-auto w-32 h-32 mb-4">
+                        <img src="{{ url_for('static', filename='uploads/' + user.profile_image) }}" alt="Profile" class="w-32 h-32 rounded-full object-cover"> {% if current_user.id == user.id %}
+                        <div class="absolute inset-0 bg-black bg-opacity-50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <label for="profile_image" class="cursor-pointer text-white">
+                                <i class="fas fa-camera text-2xl"></i>
+                            </label>
+                            <input type="file" id="profile_image" class="hidden" accept="image/*">
+                        </div>
+                        {% endif %}
+                    </div>
+                    <h2 class="text-2xl font-bold">{{ user.username }}</h2>
+                    <p class="text-gray-600">{{ user.bio or "No bio yet" }}</p>
+
+                    <div class="mt-4 flex justify-center space-x-4">
+                        {% if user.social_links.get('twitter') %}
+                        <a href="{{ user.social_links.twitter }}" class="text-blue-400 hover:text-blue-500">
+                            <i class="fab fa-twitter text-xl"></i>
+                        </a>
+                        {% endif %}
+                        <!-- Add other social links -->
+                    </div>
+                </div>
+
+                <div class="mt-6 border-t pt-6">
+                    <div class="grid grid-cols-3 gap-4 text-center">
+                        <div>
+                            <div class="text-2xl font-bold text-indigo-600">{{ user.total_polls_created }}</div>
+                            <div class="text-sm text-gray-500">Polls</div>
+                        </div>
+                        <div>
+                            <div class="text-2xl font-bold text-indigo-600">{{ user.total_votes_cast }}</div>
+                            <div class="text-sm text-gray-500">Votes</div>
+                        </div>
+                        <div>
+                            <div class="text-2xl font-bold text-indigo-600">{{ user.badges|length }}</div>
+                            <div class="text-sm text-gray-500">Badges</div>
+                        </div>
+                    </div>
+                </div>
+
+                {% if current_user.id == user.id %}
+                <div class="mt-6">
+                    <button id="editProfileBtn" class="w-full bg-indigo-600 text-white rounded-lg px-4 py-2 hover:bg-indigo-700 transition-colors">
+                        Edit Profile
+                    </button>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Activity Feed -->
+        <div class="lg:col-span-2">
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h3 class="text-xl font-bold mb-6">Recent Activity</h3>
+                <div class="space-y-6">
+                    <!-- Activity Items -->
+                    {% for activity in activities %}
+                    <div class="flex items-start space-x-4">
+                        <div class="flex-shrink-0">
+                            <div class="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center">
+                                <i class="fas {{ activity.icon }} text-indigo-600"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow">
+                            <p class="text-gray-900">{{ activity.description }}</p>
+                            <p class="text-sm text-gray-500">{{ activity.timestamp.strftime('%Y-%m-%d %H:%M') }}</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Profile Modal -->
+<div id="editProfileModal" class="fixed inset-0 bg-black bg-opacity-50 hidden">
+    <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-md">
+        <div class="bg-white rounded-xl shadow-xl p-6">
+            <h3 class="text-xl font-bold mb-4">Edit Profile</h3>
+            <form id="editProfileForm">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Bio</label>
+                        <textarea name="bio" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">{{ user.bio }}</textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Location</label>
+                        <input type="text" name="location" value="{{ user.location }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Social Links</label>
+                        <div class="mt-1 space-y-2">
+                            <input type="url" name="twitter" placeholder="Twitter URL" value="{{ user.social_links.twitter }}" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                            <!-- Add other social links inputs -->
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-6 flex justify-end space-x-3">
+                    <button type="button" id="cancelEditBtn" class="px-4 py-2 border rounded-md hover:bg-gray-50">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Profile Image Upload
+    document.getElementById('profile_image').addEventListener('change', async function(e) {
+        const file = e.target.files[0];
+        const formData = new FormData();
+        formData.append('image', file);
+
+        try {
+            const response = await fetch('/user/update-profile-image', {
+                method: 'POST',
+                body: formData
+            });
+            if (response.ok) {
+                window.location.reload();
+            }
+        } catch (error) {
+            console.error('Error uploading image:', error);
+        }
+    });
+
+    // Edit Profile Modal
+    const modal = document.getElementById('editProfileModal');
+    const editBtn = document.getElementById('editProfileBtn');
+    const cancelBtn = document.getElementById('cancelEditBtn');
+
+    editBtn.addEventListener('click', () => {
+        modal.classList.remove('hidden');
+    });
+
+    cancelBtn.addEventListener('click', () => {
+        modal.classList.add('hidden');
+    });
+
+    // Edit Profile Form
+    document.getElementById('editProfileForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+
+        try {
+            const response = await fetch('/user/update-profile', {
+                method: 'POST',
+                body: formData
+            });
+            if (response.ok) {
+                window.location.reload();
+            }
+        } catch (error) {
+            console.error('Error updating profile:', error);
+        }
+    });
+</script>
+{% endblock %}
